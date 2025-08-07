@@ -1,7 +1,70 @@
-/* предыдущие стили остаются */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to bottom right, #ffe6f0, #f0f8ff);
+  color: #333;
+}
 
-.calendar-section {
-  margin-top: 30px;
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  color: #cc3399;
+}
+
+.fact-box {
+  background: #fff0f5;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.input-section,
+.symptom-section,
+.calendar-section,
+.legend {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+input,
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  background: linear-gradient(to right, #cc3399, #9966cc);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #calendar {
@@ -35,14 +98,58 @@
   border: 2px solid #cc3399;
 }
 
-.symptom-section {
-  margin-top: 30px;
+.legend ul {
+  list-style: none;
+  padding: 0;
 }
 
-select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+.legend-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border-radius: 4px;
+}
+
+.legend-color.period { background: #ffcccc; }
+.legend-color.ovulation { background: #e0ccff; }
+.legend-color.fertile { background: #ffd9ec; }
+.legend-color.selected { border: 2px solid #cc3399; }
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-group label {
+  background: #f0f0ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-group input {
+  display: none;
+}
+
+.checkbox-group input:checked + label {
+  background: #cc3399;
+  color: white;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
+  }
+
+  #calendar {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .checkbox-group {
+    flex-direction: column;
+  }
 }

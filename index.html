@@ -1,109 +1,54 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Трекер менструаций</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Мой Цикл</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="app-header">
-    <h1>Трекер менструаций</h1>
-    <p class="subtitle">Отслеживайте цикл, прогнозируйте следующую дату и отмечайте самочувствие</p>
-  </header>
+  <div class="container">
+    <h1>Мой Цикл</h1>
 
-  <main class="container">
-    <section class="stats card">
-      <h2>Статистика и прогноз</h2>
-      <div class="stats-grid">
-        <div>
-          <div class="stat-label">Средняя длина цикла</div>
-          <div class="stat-value" id="avgCycle">—</div>
-        </div>
-        <div>
-          <div class="stat-label">Средняя длительность менструации</div>
-          <div class="stat-value" id="avgPeriod">—</div>
-        </div>
-        <div>
-          <div class="stat-label">Последнее начало</div>
-          <div class="stat-value" id="lastStart">—</div>
-        </div>
-        <div>
-          <div class="stat-label">Следующее ожидаемое начало</div>
-          <div class="stat-value" id="nextStart">—</div>
-        </div>
-      </div>
-      <p class="hint">Прогноз приблизительный, особенно при нерегулярном цикле.</p>
-    </section>
+    <div class="input-section">
+      <label for="startDate">Дата начала последних месячных:</label>
+      <input type="date" id="startDate" />
+      <label for="cycleLength">Длина цикла (дней):</label>
+      <input type="number" id="cycleLength" value="28" min="20" max="40" />
+      <button onclick="calculateCycle()">Рассчитать</button>
+    </div>
 
-    <section class="form card">
-      <h2>Добавить запись</h2>
-      <form id="entryForm">
-        <div class="form-row">
-          <label for="startDate">Дата начала *</label>
-          <input type="date" id="startDate" required />
-        </div>
-        <div class="form-row">
-          <label for="endDate">Дата окончания</label>
-          <input type="date" id="endDate" />
-        </div>
-        <div class="form-row">
-          <label for="flow">Интенсивность</label>
-          <select id="flow">
-            <option value="">Не указано</option>
-            <option value="light">Легкая</option>
-            <option value="medium">Средняя</option>
-            <option value="heavy">Сильная</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label for="symptoms">Симптомы</label>
-          <div class="chips">
-            <label><input type="checkbox" value="спазмы" /> спазмы</label>
-            <label><input type="checkbox" value="боль в груди" /> боль в груди</label>
-            <label><input type="checkbox" value="усталость" /> усталость</label>
-            <label><input type="checkbox" value="настроение" /> настроение</label>
-            <label><input type="checkbox" value="головная боль" /> головная боль</label>
-          </div>
-        </div>
-        <div class="form-row">
-          <label for="notes">Заметки</label>
-          <textarea id="notes" rows="3" placeholder="Что важно отметить?"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn primary">Сохранить</button>
-          <button type="button" id="resetBtn" class="btn danger outline" title="Удалить все данные">Сбросить всё</button>
-        </div>
-      </form>
-    </section>
-
-    <section class="calendar card">
+    <div class="calendar-section">
       <h2>Календарь</h2>
-      <div class="cal-header">
-        <button id="prevMonth" class="btn">&larr;</button>
-        <div id="monthLabel"></div>
-        <button id="nextMonth" class="btn">&rarr;</button>
-      </div>
-      <div class="cal-weekdays">
-        <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
-      </div>
-      <div id="calendarGrid" class="cal-grid"></div>
-      <div class="legend">
-        <span class="dot past"></span> прошедшие дни менструации
-        <span class="dot predicted"></span> прогнозируемые дни
-      </div>
-    </section>
+      <div id="calendar"></div>
+    </div>
 
-    <section class="list card">
-      <h2>Мои циклы</h2>
-      <div id="cyclesList" class="cycles-list"></div>
-    </section>
-  </main>
+    <div class="symptom-section">
+      <h2>Симптомы и настроение</h2>
+      <label for="mood">Настроение:</label>
+      <select id="mood">
+        <option value="">—</option>
+        <option>Радость</option>
+        <option>Грусть</option>
+        <option>Раздражение</option>
+        <option>Спокойствие</option>
+      </select>
 
-  <footer class="app-footer">
-    <small>Данные хранятся только в вашем браузере.</small>
-  </footer>
+      <label for="symptom">Симптомы:</label>
+      <select id="symptom">
+        <option value="">—</option>
+        <option>Боль</option>
+        <option>Вздутие</option>
+        <option>Усталость</option>
+        <option>Головная боль</option>
+      </select>
+
+      <button onclick="saveSymptoms()">Сохранить для выбранной даты</button>
+      <p id="selectedDateInfo"></p>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
 </html>
+

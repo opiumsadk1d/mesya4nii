@@ -1,0 +1,303 @@
+// Простая локальная база (localStorage)
+const STORAGE_KEY = 'periodTracker.v1';
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function toYMD(date) {
+  const y = date.getFullYear();
+  const m = pad(date.getMonth() + 1);
+  const d = pad(date.getDate());
+  return `${y}-${m}-${d}`;
+}
+// Чтобы избежать TZ-сдвигов (берем полдень локального времени)
+function parseYMD(ymd) {
+  if (!ymd) return null;
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0, 0);
+}
+function daysDiff(aYMD, bYMD) {
+  const a = parseYMD(aYMD), b = parseYMD(bYMD);
+  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+}
+function addDaysYMD(ymd, days) {
+  const d = parseYMD(ymd);
+  d.setDate(d.getDate() + days);
+  return toYMD(d);
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { cycles: [] };
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data.cycles)) data.cycles = [];
+    return data;
+  } catch {
+    return { cycles: [] };
+  }
+}
+function save(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let db = load();
+
+// Вычисления
+function sortCycles(cycles) {
+  return [...cycles].sort((a, b) => a.start.localeCompare(b.start));
+}
+function getAvgCycleLength(cycles) {
+  const sorted = sortCycles(cycles);
+  const gaps = [];
+  for (let i = 1; i < sorted.length; i++) {
+    gaps.push(daysDiff(sorted[i - 1].start, sorted[i].start));
+  }
+  if (gaps.length === 0) return null;
+  const avg = Math.round(gaps.reduce((s, x) => s + x, 0) / gaps.length);
+  return Math.max(avg, 1);
+}
+function getAvgPeriodLength(cycles) {
+  const lengths = cycles
+    .filter(c => c.end && c.start)
+    .map(c => Math.max(1, daysDiff(c.start, c.end) + 1)); // включительно
+  if (lengths.length === 0) return null;
+  return Math.round(lengths.reduce((s, x) => s + x, 0) / lengths.length);
+}
+function getLastStart(cycles) {
+  if (cycles.length === 0) return null;
+  return sortCycles(cycles).at(-1).start;
+}
+function getPrediction(cycles) {
+  const lastStart = getLastStart(cycles);
+  const avgCycle = getAvgCycleLength(cycles);
+  const avgPeriod = getAvgPeriodLength(cycles) ?? 5;
+  if (!lastStart || !avgCycle) return { nextStart: null, predictedDays: [] };
+
+  const nextStart = addDaysYMD(lastStart, avgCycle);
+  const predictedDays = [];
+  for (let i = 0; i < avgPeriod; i++) {
+    predictedDays.push(addDaysYMD(nextStart, i));
+  }
+  return { nextStart, predictedDays };
+}
+
+// Рендер статистики
+function renderStats() {
+  const cycles = db.cycles;
+  const avgC = getAvgCycleLength(cycles);
+  const avgP = getAvgPeriodLength(cycles);
+  const lastS = getLastStart(cycles);
+  const { nextStart } = getPrediction(cycles);
+
+  $('#avgCycle').textContent = avgC ? `${avgC} дн.` : '—';
+  $('#avgPeriod').textContent = avgP ? `${avgP} дн.` : '—';
+  $('#lastStart').textContent = lastS ? formatHuman(lastS) : '—';
+  $('#nextStart').textContent = nextStart ? formatHuman(nextStart) : '—';
+}
+
+function formatHuman(ymd) {
+  const d = parseYMD(ymd);
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Рендер списка циклов
+function renderList() {
+  const wrap = $('#cyclesList');
+  wrap.innerHTML = '';
+  const items = sortCycles(db.cycles);
+  if (items.length === 0) {
+    wrap.innerHTML = '<div class="cycle-item"><div class="cycle-info">Пока нет записей. Добавьте первую выше.</div></div>';
+    return;
+  }
+  for (const c of items) {
+    const len = c.end ? (daysDiff(c.start, c.end) + 1) : null;
+    const el = document.createElement('div');
+    el.className = 'cycle-item';
+    el.innerHTML = `
+      <div class="cycle-info">
+        <strong>${formatHuman(c.start)}</strong>${c.end ? ` — ${formatHuman(c.end)}` : ' — ...'}
+        <span style="color:#9ca3af">
+          ${len ? `Дней: ${len}. ` : ''}
+          ${c.flow ? `Интенсивность: ${flowLabel(c.flow)}. ` : ''}
+          ${c.symptoms?.length ? `Симптомы: ${c.symptoms.join(', ')}. ` : ''}
+          ${c.notes ? `Заметки: ${escapeHtml(c.notes)}` : ''}
+        </span>
+      </div>
+      <div class="cycle-actions">
+        <button class="btn" data-edit="${c.start}">Редактировать</button>
+        <button class="btn danger" data-del="${c.start}">Удалить</button>
+      </div>
+    `;
+    wrap.appendChild(el);
+  }
+
+  // Слушатели для редактирования/удаления
+  wrap.addEventListener('click', (e) => {
+    const del = e.target.closest('[data-del]');
+    const edit = e.target.closest('[data-edit]');
+    if (del) {
+      const key = del.getAttribute('data-del');
+      db.cycles = db.cycles.filter(c => c.start !== key);
+      save(db); renderAll();
+    } else if (edit) {
+      const key = edit.getAttribute('data-edit');
+      const c = db.cycles.find(x => x.start === key);
+      if (!c) return;
+      $('#startDate').value = c.start;
+      $('#endDate').value = c.end || '';
+      $('#flow').value = c.flow || '';
+      $$('#entryForm .chips input[type="checkbox"]').forEach(ch => {
+        ch.checked = c.symptoms?.includes(ch.value) || false;
+      });
+      $('#notes').value = c.notes || '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, { once: true });
+}
+
+function flowLabel(v) {
+  if (v === 'light') return 'легкая';
+  if (v === 'medium') return 'средняя';
+  if (v === 'heavy') return 'сильная';
+  return 'не указано';
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// Календарь
+let calMonth = (() => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1, 12, 0, 0, 0);
+})();
+
+function monthLabel(d) {
+  return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+function getMonthDays(year, month) {
+  const first = new Date(year, month, 1, 12);
+  const last = new Date(year, month + 1, 0, 12);
+  return { first, last, count: last.getDate() };
+}
+function weekDayIndexMonSun(date) {
+  // 0..6 (Mon..Sun)
+  let w = date.getDay(); // 0..6 (Sun..Sat)
+  return (w + 6) % 7;
+}
+function isBetweenYMD(ymd, start, end) {
+  if (!start) return false;
+  if (!end) return ymd === start;
+  return start <= ymd && ymd <= end;
+}
+function collectPastDays(cycles) {
+  const set = new Set();
+  for (const c of cycles) {
+    if (!c.start) continue;
+    const end = c.end || c.start;
+    let d = c.start;
+    while (d <= end) {
+      set.add(d);
+      d = addDaysYMD(d, 1);
+    }
+  }
+  return set;
+}
+
+function renderCalendar() {
+  $('#monthLabel').textContent = monthLabel(calMonth);
+  const grid = $('#calendarGrid');
+  grid.innerHTML = '';
+
+  const y = calMonth.getFullYear();
+  const m = calMonth.getMonth();
+  const { first, count } = getMonthDays(y, m);
+  const startOffset = weekDayIndexMonSun(first);
+
+  const pastDays = collectPastDays(db.cycles);
+  const { predictedDays } = getPrediction(db.cycles);
+  const predSet = new Set(predictedDays);
+
+  // Пустышки до первого дня
+  for (let i = 0; i < startOffset; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'day inactive';
+    grid.appendChild(cell);
+  }
+  // Дни месяца
+  for (let d = 1; d <= count; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'day';
+    const ymd = toYMD(new Date(y, m, d, 12));
+
+    const badges = [];
+    if (pastDays.has(ymd)) badges.push('<span class="badge past">менстр.</span>');
+    if (predSet.has(ymd)) badges.push('<span class="badge pred">прогноз</span>');
+
+    cell.innerHTML = `<div class="num">${d}</div>${badges.join('')}`;
+    grid.appendChild(cell);
+  }
+}
+
+// Обработчики формы
+$('#entryForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const start = $('#startDate').value;
+  const end = $('#endDate').value || null;
+  const flow = $('#flow').value || null;
+  const symptoms = $$('#entryForm .chips input[type="checkbox"]:checked').map(ch => ch.value);
+  const notes = $('#notes').value.trim();
+
+  if (!start) {
+    alert('Укажите дату начала.');
+    return;
+  }
+  if (end && daysDiff(start, end) < 0) {
+    alert('Дата окончания не может быть раньше даты начала.');
+    return;
+  }
+
+  // Если уже есть запись с таким началом — обновим, иначе добавим
+  const idx = db.cycles.findIndex(c => c.start === start);
+  const record = { start, end, flow, symptoms, notes };
+  if (idx >= 0) db.cycles[idx] = record;
+  else db.cycles.push(record);
+
+  save(db);
+  // Очистим форму (кроме даты начала, удобно для правок)
+  // $('#startDate').value = '';
+  $('#endDate').value = '';
+  $('#flow').value = '';
+  $$('#entryForm .chips input[type="checkbox"]').forEach(ch => ch.checked = false);
+  $('#notes').value = '';
+  renderAll();
+});
+
+$('#resetBtn').addEventListener('click', () => {
+  if (confirm('Удалить ВСЕ записи? Это действие нельзя отменить.')) {
+    db = { cycles: [] };
+    save(db);
+    renderAll();
+  }
+});
+
+$('#prevMonth').addEventListener('click', () => {
+  calMonth.setMonth(calMonth.getMonth() - 1);
+  renderCalendar();
+});
+$('#nextMonth').addEventListener('click', () => {
+  calMonth.setMonth(calMonth.getMonth() + 1);
+  renderCalendar();
+});
+
+function renderAll() {
+  renderStats();
+  renderCalendar();
+  renderList();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
+});

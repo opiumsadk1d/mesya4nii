@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Трекер менструаций</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Трекер менструаций</h1>
+    <p class="subtitle">Отслеживайте цикл, прогнозируйте следующую дату и отмечайте самочувствие</p>
+  </header>
+
+  <main class="container">
+    <section class="stats card">
+      <h2>Статистика и прогноз</h2>
+      <div class="stats-grid">
+        <div>
+          <div class="stat-label">Средняя длина цикла</div>
+          <div class="stat-value" id="avgCycle">—</div>
+        </div>
+        <div>
+          <div class="stat-label">Средняя длительность менструации</div>
+          <div class="stat-value" id="avgPeriod">—</div>
+        </div>
+        <div>
+          <div class="stat-label">Последнее начало</div>
+          <div class="stat-value" id="lastStart">—</div>
+        </div>
+        <div>
+          <div class="stat-label">Следующее ожидаемое начало</div>
+          <div class="stat-value" id="nextStart">—</div>
+        </div>
+      </div>
+      <p class="hint">Прогноз приблизительный, особенно при нерегулярном цикле.</p>
+    </section>
+
+    <section class="form card">
+      <h2>Добавить запись</h2>
+      <form id="entryForm">
+        <div class="form-row">
+          <label for="startDate">Дата начала *</label>
+          <input type="date" id="startDate" required />
+        </div>
+        <div class="form-row">
+          <label for="endDate">Дата окончания</label>
+          <input type="date" id="endDate" />
+        </div>
+        <div class="form-row">
+          <label for="flow">Интенсивность</label>
+          <select id="flow">
+            <option value="">Не указано</option>
+            <option value="light">Легкая</option>
+            <option value="medium">Средняя</option>
+            <option value="heavy">Сильная</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="symptoms">Симптомы</label>
+          <div class="chips">
+            <label><input type="checkbox" value="спазмы" /> спазмы</label>
+            <label><input type="checkbox" value="боль в груди" /> боль в груди</label>
+            <label><input type="checkbox" value="усталость" /> усталость</label>
+            <label><input type="checkbox" value="настроение" /> настроение</label>
+            <label><input type="checkbox" value="головная боль" /> головная боль</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="notes">Заметки</label>
+          <textarea id="notes" rows="3" placeholder="Что важно отметить?"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Сохранить</button>
+          <button type="button" id="resetBtn" class="btn danger outline" title="Удалить все данные">Сбросить всё</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="calendar card">
+      <h2>Календарь</h2>
+      <div class="cal-header">
+        <button id="prevMonth" class="btn">&larr;</button>
+        <div id="monthLabel"></div>
+        <button id="nextMonth" class="btn">&rarr;</button>
+      </div>
+      <div class="cal-weekdays">
+        <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+      </div>
+      <div id="calendarGrid" class="cal-grid"></div>
+      <div class="legend">
+        <span class="dot past"></span> прошедшие дни менструации
+        <span class="dot predicted"></span> прогнозируемые дни
+      </div>
+    </section>
+
+    <section class="list card">
+      <h2>Мои циклы</h2>
+      <div id="cyclesList" class="cycles-list"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>Данные хранятся только в вашем браузере.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

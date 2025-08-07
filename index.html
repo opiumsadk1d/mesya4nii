@@ -8,47 +8,55 @@
 </head>
 <body>
   <div class="container">
-    <h1>Мой Цикл</h1>
+    <header>
+      <h1>Мой Цикл</h1>
+      <p>Твой персональный помощник по женскому здоровью</p>
+    </header>
 
-    <div class="input-section">
+    <section class="fact-box">
+      <h3>💡 Интересный факт</h3>
+      <p id="factText">Загружаем...</p>
+    </section>
+
+    <section class="input-section">
       <label for="startDate">Дата начала последних месячных:</label>
       <input type="date" id="startDate" />
+
       <label for="cycleLength">Длина цикла (дней):</label>
       <input type="number" id="cycleLength" value="28" min="20" max="40" />
+
       <button onclick="calculateCycle()">Рассчитать</button>
-    </div>
+    </section>
 
-    <div class="calendar-section">
-      <h2>Календарь</h2>
+    <section class="legend">
+      <h4>🔍 Легенда:</h4>
+      <ul>
+        <li><span class="legend-color period"></span> Месячные</li>
+        <li><span class="legend-color ovulation"></span> Овуляция</li>
+        <li><span class="legend-color fertile"></span> Фертильные дни</li>
+        <li><span class="legend-color selected"></span> Выбранный день</li>
+      </ul>
+    </section>
+
+    <section class="calendar-section">
+      <div class="calendar-header">
+        <button onclick="prevMonth()">←</button>
+        <h2 id="calendarTitle">Месяц</h2>
+        <button onclick="nextMonth()">→</button>
+      </div>
       <div id="calendar"></div>
-    </div>
+      <p id="cycleInfo"></p>
+    </section>
 
-    <div class="symptom-section">
-      <h2>Симптомы и настроение</h2>
-      <label for="mood">Настроение:</label>
-      <select id="mood">
-        <option value="">—</option>
-        <option>Радость</option>
-        <option>Грусть</option>
-        <option>Раздражение</option>
-        <option>Спокойствие</option>
-      </select>
+    <section class="symptom-section">
+      <h2>Настроение и симптомы</h2>
+      <p id="selectedDateInfo">Выберите день в календаре</p>
 
-      <label for="symptom">Симптомы:</label>
-      <select id="symptom">
-        <option value="">—</option>
-        <option>Боль</option>
-        <option>Вздутие</option>
-        <option>Усталость</option>
-        <option>Головная боль</option>
-      </select>
+      <label>Настроение:</label>
+      <div id="moods" class="checkbox-group"></div>
 
-      <button onclick="saveSymptoms()">Сохранить для выбранной даты</button>
-      <p id="selectedDateInfo"></p>
-    </div>
-  </div>
+      <label>Симптомы:</label>
+      <div id="symptoms" class="checkbox-group"></div>
 
-  <script src="app.js"></script>
-</body>
-</html>
+      <button onclick
 
